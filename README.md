@@ -56,6 +56,7 @@ By default, it processes the next image URL from Google Sheets, generates conten
 
 Create a .env file with:
 
+```plaintext
 OPENAI_API_KEY=your_openai_key
 SERPAPI_KEY=your_serpapi_key
 GOOGLE_SERVICE_ACCOUNT_JSON=path/to/service.json
@@ -69,8 +70,7 @@ SMTP_SERVER=smtp.example.com
 SMTP_PORT=587
 EMAIL_USER=your@email.com
 EMAIL_PASS=your_email_password
-
----
+```
 
 🧪 Example Output
 
