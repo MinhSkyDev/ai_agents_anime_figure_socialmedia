@@ -13,11 +13,7 @@ An automated AI workflow to analyze toy figure images, enrich them with anime/ma
 - 📊 Google Sheets Integration – Fetch and archive image URLs from a spreadsheet.
 - ✉️ Email Summary – Sends post summary reports to your email daily.
 
----
-
-📁 Project Structure
-
-.
+```plaintext
 ├── main.py                        # Main workflow script
 ├── config.py                      # Environment variables and constants
 ├── prompts/
@@ -31,8 +27,7 @@ An automated AI workflow to analyze toy figure images, enrich them with anime/ma
 │   ├── sheet_utils.py            # Google Sheets integration
 │   ├── email_utils.py            # Email summary utility
 │   └── post_scheduler.py         # Facebook & Instagram posting
-
----
+```
 
 ⚙️ Requirements
 
