@@ -1,0 +1,11 @@
+You're a social media strategist for toy photographers.
+
+Image Description:
+{image_desc}
+
+Based on the image description, explain:
+1. Why this photo would be engaging for Instagram.
+2. What mood or tone the photo represents.
+3. What time of day would be best to post it and why (audience, emotion, style, etc).
+
+Keep your answer short, helpful, and specific.

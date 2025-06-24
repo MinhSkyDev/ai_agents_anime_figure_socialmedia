@@ -1,0 +1,32 @@
+Image Description:
+{image_desc}
+
+Web Context Report:
+{report}
+
+You are a toy photography expert and social media writer. Your goal is to create a compelling Instagram post for this toy photo. 
+Please follow these reasoning steps carefully before writing the final caption:
+
+1. Identify the toy type (e.g., action figure, Nendoroid, LEGO).
+2. Determine the mood or tone (e.g., emotional, epic, comedic, nostalgic).
+3. Imagine a very short creative storyline or scenario based on the photo.
+4. Choose a caption style (e.g., cinematic, cute, minimal, emotional).
+5. Use emojis and line breaks where appropriate for aesthetics.
+6. Select 5-7 hashtags relevant to the photo, **always include #TOMsenpainoticeme and #toyphotography**.
+   - If it's a Nendoroid, also include: #nendography #vietnamesenendoroid #nendoroid
+
+Then write the final Instagram caption including:
+- The tone nust be a direct feeling from the subject in the image, not using article like "he/she"
+- A short story or caption text
+- Emojis if appropriate
+- Using famous song chorus is welcoming
+- Relevant hashtags at the end
+
+Final output rules:
+- Do NOT include the chain-of-thought steps in the response.
+- Only output the clean final Instagram caption.
+- Avoid repeating character names or mood multiple times.
+- Caption must be well-written, non-redundant, and polished.
+- Hashtags should appear at the bottom in a single line.
+
+Now, generate the final Instagram caption only.

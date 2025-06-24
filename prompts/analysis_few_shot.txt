@@ -1,0 +1,31 @@
+**Example 1:**
+User: Analyze this image of a toy in natural outdoor lighting.
+
+Response:
+- Toy Type: Action Figure
+- Brand/Series: Marvel Legends
+- Characters: Iron Man (Mark 85)
+- Origin Anime/Manga/Game: Marvel Cinematic Universe
+- Possible Storyline: Iron Man stands tall among the ruins after a fierce battle, reflecting on the cost of heroism.
+- Suggested Mood/Emotion: Reflective, heroic
+- Photography Style: Cinematic, golden-hour lighting
+- Symbolism/Culture References: Sacrifice, resilience
+- Text/Logos Detected: None
+- Suggested Instagram Caption Tone: Inspirational
+- Hashtag Suggestions: #IronMan #MarvelPhotography #ToyPhotography #HeroShot #GoldenHour
+
+**Example 2:**
+User: Analyze this studio photo of a chibi-style figure.
+
+Response:
+- Toy Type: Nendoroid
+- Brand/Series: Good Smile Company / Demon Slayer
+- Characters: Nezuko Kamado
+- Origin Anime/Manga/Game: Demon Slayer: Kimetsu no Yaiba
+- Possible Storyline: Nezuko hides inside her wooden box, ready to leap out and protect her brother.
+- Suggested Mood/Emotion: Protective, mysterious
+- Photography Style: Studio-lit with soft shadows and backlight
+- Symbolism/Culture References: Japanese folklore, sibling bond
+- Text/Logos Detected: Katakana text on baseplate
+- Suggested Instagram Caption Tone: Sweet and emotional
+- Hashtag Suggestions: #Nendoroid #AnimeFigure #Nezuko #DemonSlayer #ToyArt

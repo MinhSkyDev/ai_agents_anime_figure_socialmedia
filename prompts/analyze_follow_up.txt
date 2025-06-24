@@ -1,0 +1,13 @@
+Now analyze this image with the same structured output format:
+
+- Toy Type:
+- Brand/Series:
+- Characters:
+- Origin Anime/Manga/Game:
+- Possible Storyline:
+- Suggested Mood/Emotion:
+- Photography Style:
+- Symbolism/Culture References:
+- Text/Logos Detected:
+- Suggested Instagram Caption Tone:
+- Hashtag Suggestions:
