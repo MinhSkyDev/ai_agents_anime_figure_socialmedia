@@ -1,13 +1,21 @@
-Now analyze this image with the same structured output format:
+Generate the response strictly in valid JSON format. Must not include any markdown, quotes, or text outside the JSON object
 
-- Toy Type:
-- Brand/Series:
-- Characters:
-- Origin Anime/Manga/Game:
-- Possible Storyline:
-- Suggested Mood/Emotion:
-- Photography Style:
-- Symbolism/Culture References:
-- Text/Logos Detected:
-- Suggested Instagram Caption Tone:
-- Hashtag Suggestions:
+{
+  "toy_type": "<Type of toy, e.g., Action Figure, Nendoroid, LEGO>",
+  "brand_or_series": "<Brand or series of the toy>",
+  "characters": "<Character(s) represented by the toy>",
+  "origin_anime_manga_game": "<The origin media, e.g., an anime, manga, or game>",
+  "description_mood_to_crawl_and_research": "<Detailed description for crawling related information, e.g., context, mood, or scenario>",
+  "possible_storyline": "<A short creative storyline or scenario associated with the toy>",
+  "suggested_mood_emotion": "<Mood or emotion conveyed, e.g., reflective, heroic>",
+  "photography_style": "<Photography style description, e.g., cinematic, studio-lit>",
+  "symbolism_culture_references": "<Symbolism or cultural references associated with the toy or context>",
+  "text_logos_detected": "<Any text or logos visible in the image, if applicable>",
+  "suggested_instagram_caption_tone": "<Tone for an Instagram caption, e.g., inspirational, sweet>",
+  "hashtag_suggestions": [
+    "<Hashtag 1>",
+    "<Hashtag 2>",
+    "...",
+    "<Hashtag N>"
+  ]
+}

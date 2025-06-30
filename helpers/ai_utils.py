@@ -36,37 +36,64 @@ def analyze_image(buffer, image_user_description):
 
     return response.choices[0].message.content
 
-def web_context_report(image_desc, image_user_description):
+def web_context_report(image_desc_json, image_user_description):
     from config import SERPAPI_KEY
     import time
+    from serpapi import GoogleSearch
+    import json
 
     def search_snippets(query):
         search = GoogleSearch({'q': query, 'api_key': SERPAPI_KEY})
-        results = search.get_dict().get('organic_results', [])[:5]
+        results = search.get_dict().get('organic_results', [])[:7]
         snippets = [r.get('snippet') for r in results if 'snippet' in r]
         return snippets
 
-    # Base search: extract keywords from the image description
-    user_context_prompt = f"The user provided the following context for the image: {image_user_description}"
-    base_query = image_desc + '\n' + user_context_prompt
+    try:
+        # Attempt to parse the JSON
+        image_desc = json.loads(image_desc_json)
+    except json.JSONDecodeError as e:
+        # Return an error message if JSON parsing fails
+        print(image_desc_json)
+        return f"Error parsing JSON: {e}", []
 
-    # Targeted searches to enrich context
+    # Extract relevant fields with fallback to empty strings
+    toy_type = image_desc.get("toy_type", "")
+    brand_series = image_desc.get("brand_or_series", "")
+    characters = image_desc.get("characters", "")
+    origin = image_desc.get("origin_anime_manga_game", "")
+    storyline = image_desc.get("possible_storyline", "")
+
+    # Ensure at least one critical field is populated to proceed
+    if not any([toy_type, brand_series, characters, origin, storyline]):
+        return "Insufficient data in JSON for meaningful queries.", []
+
+    # Base query combining user context and extracted JSON fields
+# Condensed base query construction
+    base_queries = {
+        "brand_character_details": f"Brand/Series: {brand_series}.",
+        "characters" : f"{characters}",
+        "storyline_and_context": f"Storyline: {storyline}. Origin: {origin}.",
+        "mood_and_emotion": f"Mood/Emotion: Based on {storyline}, cultural references, and user description: {image_user_description}."
+    }
+
+    # Targeted queries for three API calls
     searches = [
-        f"{base_query} anime name and brand",                      # Get brand/series name
-        f"{base_query} what happens in the anime",                 # Plot or scenario
-        f"{base_query} character background and storyline",        # Deeper character info
-        f"{base_query} fan discussion or reddit thread summary",   # Emotional tone or fan view
+        f"{base_queries['brand_character_details']}",                                        # Brand, series, and character info
+        f"Who is {base_queries['characters']}",                                              # Characters
+        f"{base_queries['storyline_and_context']} storyline plot and cultural references",   # Storyline and cultural relevance
+        f"{base_queries['mood_and_emotion']} mood, emotion, and fan discussions",            # Mood, emotion, and fan context
     ]
 
+
     all_snippets = []
-    for q in searches:
+    for idx, q in enumerate(searches):
         snippets = search_snippets(q)
         all_snippets.extend(snippets)
-        time.sleep(1.2)  # avoid hitting SerpAPI too fast
+        time.sleep(1.5)  # Rate limiting to avoid API restrictions
 
-    # Deduplicate and combine
+    # Deduplicate and consolidate results
     unique_snippets = list(dict.fromkeys(all_snippets))
-    report = '\n'.join(unique_snippets[:10])  # limit to 10 to keep it concise
+    report = '\n'.join(unique_snippets[:10])  # Limit to 10 concise snippets
 
     return report, unique_snippets
 

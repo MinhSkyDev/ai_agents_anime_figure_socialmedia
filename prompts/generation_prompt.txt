@@ -25,6 +25,9 @@ Then write the final Instagram caption including:
 
 Final output rules:
 - Do NOT include the chain-of-thought steps in the response.
+- Write as if you are the photographer, reflecting your passion and pride in the shot.
+- MUST provide smart endline for each sentence if suitable, in order to make it have a good mood
+- Avoid over-polished, corporate tones—keep it raw, genuine, and personal.
 - Only output the clean final Instagram caption.
 - Avoid repeating character names or mood multiple times.
 - MUST draws readers in with a compelling opener and closes with an engagement hook.

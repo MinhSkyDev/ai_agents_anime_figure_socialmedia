@@ -22,10 +22,10 @@ def run_daily_workflow():
         scheduled_time = datetime.now() + timedelta(hours=1)
         init_facebook()
         schedule_post(post_content, url, scheduled_time)
-        archive_image_data(url)
+        archive_image_data(url, image_user_description)
 
         #Summarize - Send Email
-        summary = f"URL: {url}\n\nDesc: {desc}\n\nPost:\n{post_content}"
+        summary = f"URL: {url}\n\nDesc: {desc}\n\nReport: {report}\n\nPost:\n{post_content}"
         send_email(summary)
     except Exception as e:
         logging.exception("Workflow failed")
