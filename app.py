@@ -12,6 +12,7 @@ from helpers.agent_tools import run_parallel_ai_pipeline, audit_hashtag_engageme
 from helpers.web_search_engine import search_web_hybrid
 from helpers.schedule_calculator import get_calculated_schedule_for_new_post
 from helpers.post_scheduler import schedule_or_publish_to_instagram
+from helpers.account_analytics import fetch_and_analyze_account_posts
 from openai import OpenAI
 from PIL import Image
 
@@ -159,6 +160,12 @@ def generate_post():
             return jsonify({'success': False, 'error': str(e)}), 500
 
     return jsonify({'success': True, 'drafts': results})
+
+@app.route('/api/account_analytics', methods=['GET'])
+def get_account_analytics():
+    """Fetches real published Instagram posts via Graph API & returns deep analytics."""
+    analytics_data = fetch_and_analyze_account_posts(limit=50)
+    return jsonify(analytics_data)
 
 @app.route('/api/search_hashtags', methods=['POST'])
 def search_hashtags():
@@ -363,14 +370,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
         .header-badges { display: flex; align-items: center; gap: 1rem; }
 
-        .harness-badge {
-            background: rgba(139, 92, 246, 0.15);
-            border: 1px solid rgba(139, 92, 246, 0.3);
-            color: #c084fc;
-            padding: 0.4rem 0.85rem;
-            border-radius: 20px;
-            font-size: 0.8rem; font-weight: 500;
+        .btn-analytics {
+            background: linear-gradient(135deg, #10b981, #3b82f6);
+            color: #ffffff; padding: 0.45rem 1rem; border-radius: 20px;
+            font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            border: none; outline: none; transition: transform 0.2s;
+            display: flex; align-items: center; gap: 0.4rem;
         }
+
+        .btn-analytics:hover { transform: translateY(-2px); }
 
         .status-badge {
             display: flex; align-items: center; gap: 0.5rem;
@@ -602,6 +610,46 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             display: flex; justify-content: space-between; align-items: center;
         }
 
+        /* Analytics Modal Styling */
+        .modal-backdrop {
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px);
+            z-index: 100; justify-content: center; align-items: center;
+        }
+
+        .modal-container {
+            background: #0f172a; border: 1px solid var(--card-border);
+            border-radius: 20px; width: 90%; max-width: 900px; max-height: 85vh;
+            overflow-y: auto; padding: 2rem; box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            display: flex; flex-direction: column; gap: 1.5rem;
+        }
+
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--card-border); padding-bottom: 1rem;
+        }
+
+        .analytics-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.03); border: 1px solid var(--card-border);
+            border-radius: 12px; padding: 1rem; text-align: center;
+        }
+
+        .stat-val { font-size: 1.5rem; font-weight: 700; color: #a7f3d0; margin-top: 0.25rem; }
+
+        .recent-posts-list {
+            display: flex; flex-direction: column; gap: 0.75rem; max-height: 250px; overflow-y: auto;
+        }
+
+        .recent-post-item {
+            background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 0.75rem; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;
+            font-size: 0.85rem;
+        }
+
         .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
 
         label {
@@ -647,10 +695,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             <div class="brand-title">AI Instagram Studio</div>
         </div>
         <div class="header-badges">
-            <div class="harness-badge">🛡️ Harness Evaluator & Multi-Agent Active</div>
+            <button class="btn-analytics" onclick="openAnalyticsModal()">📊 Account Analytics</button>
             <div class="status-badge">
                 <div class="status-dot"></div>
-                <span>Instagram Connected: @skynendography</span>
+                <span>Connected: @skynendography</span>
             </div>
         </div>
     </header>
@@ -758,6 +806,33 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         </div>
     </main>
 
+    <!-- Analytics Dashboard Modal -->
+    <div class="modal-backdrop" id="analyticsModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 style="font-family: 'Outfit', sans-serif;">📊 @skynendography Analytics & Live Feed</h2>
+                <button class="btn btn-secondary" onclick="closeAnalyticsModal()">Close ✕</button>
+            </div>
+
+            <div class="analytics-grid" id="analyticsSummaryGrid">
+                <div class="stat-card"><div>Total Posts Analyzed</div><div class="stat-val" id="statTotalPosts">0</div></div>
+                <div class="stat-card"><div>Total Likes</div><div class="stat-val" id="statTotalLikes">0</div></div>
+                <div class="stat-card"><div>Avg Likes / Post</div><div class="stat-val" id="statAvgLikes">0</div></div>
+                <div class="stat-card"><div>Avg Comments / Post</div><div class="stat-val" id="statAvgComments">0</div></div>
+            </div>
+
+            <div style="font-size: 0.9rem; font-weight: 600; margin-top: 0.5rem;">📱 Recent Published Posts Live Feed</div>
+            <div class="recent-posts-list" id="recentPostsFeed"></div>
+
+            <div style="font-size: 0.9rem; font-weight: 600; margin-top: 0.5rem;">🔥 Top Hashtags Ranking by Average Likes</div>
+            <div class="hashtag-pills" id="topHashtagRanking"></div>
+
+            <div style="font-size: 0.85rem; color: #a7f3d0; background: rgba(16, 185, 129, 0.1); padding: 0.85rem; border-radius: 10px; border: 1px solid rgba(16, 185, 129, 0.3);" id="styleVerdictBox">
+                Loading style performance verdict...
+            </div>
+        </div>
+    </div>
+
     <script>
         var currentItems = [];
         var selectedItem = null;
@@ -777,6 +852,59 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 var banner = document.getElementById('serverStatusBanner');
                 if (banner) banner.style.display = 'block';
             }
+        }
+
+        async function openAnalyticsModal() {
+            const modal = document.getElementById('analyticsModal');
+            modal.style.display = 'flex';
+
+            try {
+                const res = await fetch('/api/account_analytics');
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('statTotalPosts').innerText = data.summary.total_posts;
+                    document.getElementById('statTotalLikes').innerText = data.summary.total_likes.toLocaleString();
+                    document.getElementById('statAvgLikes').innerText = data.summary.avg_likes_per_post;
+                    document.getElementById('statAvgComments').innerText = data.summary.avg_comments_per_post;
+
+                    const feedContainer = document.getElementById('recentPostsFeed');
+                    feedContainer.innerHTML = '';
+                    data.recent_posts.forEach(p => {
+                        const div = document.createElement('div');
+                        div.className = 'recent-post-item';
+                        div.innerHTML = `
+                            <div style="flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding-right: 1rem;">
+                                ${p.caption ? p.caption.slice(0, 70) + '...' : 'No caption'}
+                            </div>
+                            <div style="display: flex; gap: 1rem; align-items: center;">
+                                <span style="color: #ec4899;">❤️ ${p.like_count}</span>
+                                <span style="color: #93c5fd;">💬 ${p.comments_count}</span>
+                                <a href="${p.permalink}" target="_blank" style="color: #c084fc; text-decoration: none;">View ↗</a>
+                            </div>
+                        `;
+                        feedContainer.appendChild(div);
+                    });
+
+                    const tagContainer = document.getElementById('topHashtagRanking');
+                    tagContainer.innerHTML = '';
+                    data.hashtag_roi.forEach(t => {
+                        const span = document.createElement('span');
+                        span.className = 'hashtag-pill';
+                        span.innerText = `${t.tag} (${t.avg_likes} avg likes)`;
+                        tagContainer.appendChild(span);
+                    });
+
+                    document.getElementById('styleVerdictBox').innerText = '💡 Content Verdict: ' + data.style_comparison.verdict;
+                } else {
+                    alert('Failed to load analytics: ' + data.error);
+                }
+            } catch (err) {
+                console.error('Analytics load error:', err);
+            }
+        }
+
+        function closeAnalyticsModal() {
+            document.getElementById('analyticsModal').style.display = 'none';
         }
 
         async function uploadPhoto(input) {
