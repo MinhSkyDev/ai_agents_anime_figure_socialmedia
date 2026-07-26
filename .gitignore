@@ -1,0 +1,24 @@
+# Environment & Sensitive Keys
+.env
+service-account.json
+*.pem
+*.key
+
+# Python Cache & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+
+# Project Data & Test Outputs
+drafts.json
+input/*
+!input/.gitkeep
+published/*
+!published/.gitkeep
+
+# Logs & Temporary Files
+*.log
+scratch/
