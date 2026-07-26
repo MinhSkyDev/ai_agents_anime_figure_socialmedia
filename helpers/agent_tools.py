@@ -149,6 +149,9 @@ For EACH hashtag in {json.dumps(hashtags_list)}, return JSON object:
 
     return breakdown
 
+# Backward compatibility alias
+audit_hashtag_engagement_virality = extract_real_hashtag_metrics_from_web
+
 def run_copywriter_agent(vision_data, web_report, user_hint=""):
     """
     Pass 3: Copywriter Agent - Writes in exact @skynendography real Instagram caption style:
