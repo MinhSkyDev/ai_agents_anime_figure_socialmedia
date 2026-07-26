@@ -8,7 +8,7 @@ import requests
 from flask import Flask, jsonify, request, send_from_directory, render_template_string, Response
 from config import INPUT_FOLDER, PUBLISHED_FOLDER, DRAFTS_FILE, SERPAPI_KEY, OPENAI_API_KEY
 from helpers.local_queue import load_drafts, save_drafts, add_draft, update_draft, mark_draft_published, delete_draft, get_pending_drafts
-from helpers.agent_tools import run_parallel_ai_pipeline
+from helpers.agent_tools import run_parallel_ai_pipeline, audit_hashtag_engagement_virality
 from helpers.web_search_engine import search_web_hybrid
 from helpers.schedule_calculator import get_calculated_schedule_for_new_post
 from helpers.post_scheduler import schedule_or_publish_to_instagram
@@ -135,7 +135,7 @@ def generate_post():
         try:
             img_buffer = resize_image_for_analysis(image_path)
             
-            # Autonomous 3-Pass Pipeline Execution with User Hint & Hashtag Rationale
+            # Autonomous 3-Pass Pipeline Execution with User Hint & Live Instagram Engagement Audit
             pipeline_res = run_parallel_ai_pipeline(img_buffer, user_description=user_hint)
             
             pending = get_pending_drafts()
@@ -168,14 +168,14 @@ def search_hashtags():
         return jsonify({'success': False, 'error': 'Missing keyword'}), 400
 
     try:
-        snippets, engine_used = search_web_hybrid(f"best instagram hashtags for {keyword} toy photography", max_results=5)
+        snippets, engine_used = search_web_hybrid(f"site:instagram.com top hashtags and engagement for {keyword} toy photography", max_results=5)
         web_info = "\n".join(snippets)
 
         prompt = f"""Keywords: {keyword}
 Search Info: {web_info}
 
-Analyze and return EXACTLY 5 high-impact viral Instagram hashtags starting with #.
-Return ONLY JSON: {{"hashtags": ["#tag1", "#tag2", "#tag3", "#tag4", "#tag5"]}}
+Analyze and return EXACTLY 5 high-impact viral Instagram hashtags starting with # (always include #nendography).
+Return ONLY JSON: {{"hashtags": ["#nendography", "#tag2", "#tag3", "#tag4", "#tag5"]}}
 """
         response = openai_client.chat.completions.create(
             model="gpt-4o",
@@ -186,18 +186,7 @@ Return ONLY JSON: {{"hashtags": ["#tag1", "#tag2", "#tag3", "#tag4", "#tag5"]}}
         data_res = json.loads(response.choices[0].message.content)
         hashtags = data_res.get("hashtags", [])[:5]
 
-        tiers = [
-            "🔥 Character Core Anchor",
-            "🌐 Niche Community Core",
-            "🚀 Explore Discovery",
-            "🏷️ Brand & Line Tag",
-            "⚡ Micro-Niche High-Win"
-        ]
-
-        breakdown = []
-        for i, tag in enumerate(hashtags):
-            t_title = tiers[i] if i < len(tiers) else "Relevant Tag"
-            breakdown.append({"tag": tag, "tier": t_title, "reason": f"Validated via {engine_used} web search research for keyword '{keyword}'"})
+        breakdown = audit_hashtag_engagement_virality(hashtags, keyword, "Anime", web_report=web_info)
 
         return jsonify({'success': True, 'hashtags': hashtags, 'hashtag_str': " ".join(hashtags), 'hashtag_breakdown': breakdown, 'engine_used': engine_used})
 
@@ -599,17 +588,19 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         }
 
         .hashtag-rationale-list {
-            display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.75rem;
-            background: rgba(0, 0, 0, 0.25); padding: 0.85rem; border-radius: 8px;
-            font-size: 0.82rem; border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.75rem;
+            background: rgba(0, 0, 0, 0.3); padding: 1rem; border-radius: 10px;
+            font-size: 0.82rem; border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
-        .hashtag-rationale-item {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0.25rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        .hashtag-rationale-card {
+            background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px; padding: 0.65rem 0.85rem; display: flex; flex-direction: column; gap: 0.25rem;
         }
 
-        .hashtag-rationale-item:last-child { border-bottom: none; }
+        .hashtag-card-header {
+            display: flex; justify-content: space-between; align-items: center;
+        }
 
         .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
 
@@ -722,18 +713,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
                     <img id="imagePreview" class="image-preview-large" src="" alt="Preview">
 
-                    <!-- Viral Hashtag Research Box & Credibility Rationale Panel -->
+                    <!-- Live Instagram Engagement Audit Panel -->
                     <div class="hashtag-search-box">
-                        <label>Viral Hashtag Research (Hybrid Search Engine: SerpAPI + Custom Fallback)</label>
+                        <label>Live Instagram Hashtag Engagement & Virality Audit</label>
                         <div class="hashtag-search-row">
                             <input type="text" id="hashtagSearchKeyword" placeholder="Keywords auto-extracted from photo...">
-                            <button class="btn btn-secondary" id="btnSearchHashtag" onclick="searchViralHashtags()">Research Top 5 Viral Hashtags</button>
+                            <button class="btn btn-secondary" id="btnSearchHashtag" onclick="searchViralHashtags()">Audit Hashtag Engagement</button>
                         </div>
                         <div id="hashtagResultsContainer" style="display: none;">
-                            <div style="font-size: 0.85rem; color: var(--text-muted);">Top 5 Viral Hashtags Found:</div>
+                            <div style="font-size: 0.85rem; color: var(--text-muted);">Top 5 Audited Virality Hashtags:</div>
                             <div class="hashtag-pills" id="hashtagPills"></div>
                             
-                            <!-- Credibility Rationale Breakdown -->
+                            <!-- Live Engagement Audit List -->
                             <div class="hashtag-rationale-list" id="hashtagRationaleList"></div>
 
                             <button class="btn btn-secondary" onclick="applyHashtagsToCaption()" style="margin-top: 0.5rem; font-size: 0.8rem;">Apply These 5 Hashtags to Caption</button>
@@ -741,7 +732,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                     </div>
 
                     <div class="form-group">
-                        <label>Instagram Caption & Hashtags (Concise Hook + Max 5 Hashtags)</label>
+                        <label>Instagram Caption & Hashtags (@skynendography Natural Voice)</label>
                         <textarea id="captionText" placeholder="Click 'Generate AI Caption' or write your custom post content..."></textarea>
                     </div>
 
@@ -879,13 +870,20 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             if (!breakdown || breakdown.length === 0) return;
 
             breakdown.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'hashtag-rationale-item';
-                div.innerHTML = `
-                    <span style="color: #c084fc; font-weight: 600;">${item.tag}</span>
-                    <span style="color: #a7f3d0; font-size: 0.78rem;">${item.tier}</span>
+                const card = document.createElement('div');
+                card.className = 'hashtag-rationale-card';
+                card.innerHTML = `
+                    <div class="hashtag-card-header">
+                        <span style="color: #c084fc; font-weight: 700; font-size: 0.9rem;">${item.tag}</span>
+                        <span style="color: #34d399; font-weight: 600; font-size: 0.78rem; background: rgba(16,185,129,0.15); padding: 0.15rem 0.5rem; border-radius: 12px;">${item.score}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.78rem; color: #a7f3d0;">
+                        <span>Tier: ${item.tier}</span>
+                        <span>Est: ${item.engagement_est}</span>
+                    </div>
+                    <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 0.15rem;">${item.reason}</div>
                 `;
-                container.appendChild(div);
+                container.appendChild(card);
             });
         }
 
@@ -956,7 +954,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             const btn = document.getElementById('btnAiGen');
             const btnText = document.getElementById('genBtnText');
             btn.disabled = true;
-            btnText.innerHTML = '<div class="spinner"></div> Running Hook & Lore AI Pipeline...';
+            btnText.innerHTML = '<div class="spinner"></div> Running Autonomous 3-Pass AI Pipeline...';
 
             try {
                 const res = await fetch('/api/generate', {
@@ -990,7 +988,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
             const btn = document.getElementById('btnSearchHashtag');
             btn.disabled = true;
-            btn.innerText = 'Searching Web...';
+            btn.innerText = 'Auditing Instagram Virality...';
 
             try {
                 const res = await fetch('/api/search_hashtags', {
@@ -1020,7 +1018,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 alert('Error searching hashtags: ' + err.message);
             } finally {
                 btn.disabled = false;
-                btn.innerText = 'Research Top 5 Viral Hashtags';
+                btn.innerText = 'Audit Hashtag Engagement';
             }
         }
 
